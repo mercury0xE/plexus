@@ -79,12 +79,14 @@ describe("PlexusFS entities", () => {
     expect(() => fs.mkdir("d")).to.throw(/EEXIST/);
   });
 
-  it("readdir lists entry names", () => {
+  it("readdir lists entry names and throws ENOENT if absent or ENOTDIR if a file", () => {
     const fs = makeFS();
     fs.writeFile("dir/a.txt", "1");
     fs.writeFile("dir/b.txt", "2");
     fs.mkdir("dir/sub", { recursive: true });
     expect(fs.readdir("dir").toSorted((a, b) => a.localeCompare(b))).to.deep.equal(["a.txt", "b.txt", "sub"]);
+    expect(() => fs.readdir("missing")).to.throw(/ENOENT/);
+    expect(() => fs.readdir("dir/a.txt")).to.throw(/ENOTDIR/);
   });
 
   it("unlink removes a file", () => {

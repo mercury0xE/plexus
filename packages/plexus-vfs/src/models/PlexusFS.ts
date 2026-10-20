@@ -106,6 +106,7 @@ export class PlexusFS extends PlexusDir implements NarrowedPromiseFsClient {
   /** Directory entry names. ENOENT if absent, ENOTDIR if it's a file. */
   readdir(path: string): string[] {
     const node = this.lookup(path);
+    FsError.invariant(node !== null, FsErrno.ENOENT, path);
     FsError.invariant(node instanceof PlexusDir, FsErrno.ENOTDIR, path);
     return Object.keys(node.entries);
   }
@@ -149,7 +150,9 @@ export class PlexusFS extends PlexusDir implements NarrowedPromiseFsClient {
     if (kind === "dir") {
       FsError.invariant(node instanceof PlexusDir, FsErrno.ENOTDIR, path);
     }
-    delete dir.entries[name];
+    transact(this, () => {
+      delete dir.entries[name];
+    });
   }
 
   /** stat — for this VFS lstat is identical (no symlinks). */
